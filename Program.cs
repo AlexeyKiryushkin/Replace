@@ -4,14 +4,22 @@ using System.IO;
 
 namespace replace
 {
+	enum ExitCode : int
+	{
+		ReplaceOK = 0,
+		NoReplaces = 1,
+		BadCmdLine = -1,
+		ReplaceFailed = -2,
+	}
+
 	class Program
 	{
 		static int _replaces = 0;
 
-		static void Main(string[] args)
+		static int Main(string[] args)
 		{
 			if (!CmdLineOk(args))
-				return;
+				return (int)ExitCode.BadCmdLine;
 
 			string filename = args[0];
 			string strtoreplace = args[1];
@@ -47,6 +55,8 @@ namespace replace
 					File.Move(sourceFileName: tempfilename, destFileName: filename);
 
 					Console.WriteLine("{0} replaces OK!", _replaces);
+
+					return (int)ExitCode.ReplaceOK;
 				}
 				else
 				{
@@ -54,15 +64,17 @@ namespace replace
 					File.Delete(tempfilename);
 
 					Console.WriteLine("OK. No replaces.");
+
+					return (int)ExitCode.NoReplaces;
 				}
 			}
 			catch(Exception ex)
 			{
 				Console.WriteLine("Replace failed:");
 				Console.WriteLine(ex.GetMessages());
-			}
 
-			Console.ReadLine();
+				return (int)ExitCode.ReplaceFailed;
+			}
 		}
 
 		static string ReplaceSubStr(string srcstr, string strtoreplace, string newstr)
@@ -89,6 +101,13 @@ namespace replace
 			else
 			{
 				Console.WriteLine(@"Use: replace.exe ""File name.ext"" ""string to replace"" ""new string""");
+				Console.WriteLine("Or, if args ends with backsplash:");
+				Console.WriteLine(@"Use: replace.exe ""File name.ext"" ""string to replace\\"" ""new string\\""");
+				Console.WriteLine("Return result code:");
+				Console.WriteLine(" 0 - Replace OK.");
+				Console.WriteLine(" 1 - No replaces.");
+				Console.WriteLine("-1 - Bad cmdline");
+				Console.WriteLine("-2 - Replace failed.");
 
 				return false;
 			}
